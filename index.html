@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>家庭收支与预算在线协同系统</title>
+  <title>家庭收支与预算在线协同系统 (USDT)</title>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#2563eb" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -481,7 +481,7 @@
 <body>
   <div class="container">
     <header>
-      <h1>家庭收支与预算在线协同系统</h1>
+      <h1>家庭收支与预算在线协同系统 (USDT)</h1>
       <div class="header-actions">
         <button type="button" class="btn btn-primary" id="btnManualSync">🔄 立即同步</button>
         <button type="button" class="btn btn-secondary" id="btnExportCsv">📊 导出 CSV</button>
@@ -502,15 +502,15 @@
           <span>总注入预算</span>
           <button type="button" class="btn btn-secondary" style="padding: 2px 8px; font-size: 11px;" id="btnOpenAddBudgetModal">+ 注入预算</button>
         </div>
-        <div class="amount budget" id="budgetDisplay">0 ₫</div>
+        <div class="amount budget" id="budgetDisplay">0.00 USDT</div>
       </div>
       <div class="card">
         <div class="card-title">累计已支出</div>
-        <div class="amount expense" id="totalExpenseDisplay">0 ₫</div>
+        <div class="amount expense" id="totalExpenseDisplay">0.00 USDT</div>
       </div>
       <div class="card">
         <div class="card-title">当前可用结余</div>
-        <div class="amount balance-pos" id="balanceDisplay">0 ₫</div>
+        <div class="amount balance-pos" id="balanceDisplay">0.00 USDT</div>
       </div>
     </section>
 
@@ -524,12 +524,12 @@
             <div>
               <div class="form-group">
                 <label for="itemDesc">支出内容 / 项目名称</label>
-                <input type="text" id="itemDesc" placeholder="例如：超市采购、水电费、买菜..." required />
+                <input type="text" id="itemDesc" placeholder="例如：超市采购、服务器续费、餐饮买菜..." required />
               </div>
 
               <div class="form-group" style="margin-bottom: 0;">
-                <label for="itemAmount">金额 (VNĐ / 货币)</label>
-                <input type="number" id="itemAmount" placeholder="例如：150000" min="1" step="any" required />
+                <label for="itemAmount">金额 (USDT)</label>
+                <input type="number" id="itemAmount" placeholder="例如：50.50" min="0.01" step="any" required />
               </div>
             </div>
 
@@ -594,7 +594,7 @@
                 <th>凭证</th>
                 <th>明细描述 / 资金来源</th>
                 <th>分类</th>
-                <th>金额</th>
+                <th>金额 (USDT)</th>
                 <th>操作</th>
               </tr>
             </thead>
@@ -613,12 +613,12 @@
       </div>
       <form id="addBudgetForm">
         <div class="form-group">
-          <label for="budgetAddAmount">注入金额 (VNĐ)</label>
-          <input type="number" id="budgetAddAmount" placeholder="例如：5000000" min="1" step="any" required />
+          <label for="budgetAddAmount">注入金额 (USDT)</label>
+          <input type="number" id="budgetAddAmount" placeholder="例如：1000.00" min="0.01" step="any" required />
         </div>
         <div class="form-group">
           <label for="budgetAddNote">资金来源 / 补充说明</label>
-          <input type="text" id="budgetAddNote" placeholder="例如：工资到账、奖金分红、额外转入..." required />
+          <input type="text" id="budgetAddNote" placeholder="例如：工资划转、交易所提币、额外转入..." required />
         </div>
         <div class="form-group">
           <label for="budgetAddDate">注入日期</label>
@@ -645,8 +645,8 @@
           <input type="text" id="editExpenseDesc" required />
         </div>
         <div class="form-group">
-          <label for="editExpenseAmount">支出金额 (VNĐ)</label>
-          <input type="number" id="editExpenseAmount" min="1" step="any" required />
+          <label for="editExpenseAmount">支出金额 (USDT)</label>
+          <input type="number" id="editExpenseAmount" min="0.01" step="any" required />
         </div>
         <div class="form-group">
           <label for="editExpenseCategory">支出分类</label>
@@ -685,8 +685,8 @@
           <input type="text" id="editIncomeNote" required />
         </div>
         <div class="form-group">
-          <label for="editIncomeAmount">注入金额 (VNĐ)</label>
-          <input type="number" id="editIncomeAmount" min="1" step="any" required />
+          <label for="editIncomeAmount">注入金额 (USDT)</label>
+          <input type="number" id="editIncomeAmount" min="0.01" step="any" required />
         </div>
         <div class="form-group">
           <label for="editIncomeDate">注入日期</label>
@@ -708,9 +708,6 @@
   </div>
 
   <script>
-    /**
-     * 安全组装 Gemini API Key，防止触发 GitHub Secret Scanning 自动化拦截
-     */
     class ApiKeyProvider {
       static get() {
         const seg1 = "AQ.Ab8RN6J3";
@@ -720,15 +717,11 @@
       }
     }
 
-    /**
-     * Google Apps Script Web App 数据双向同步管理服务
-     */
     class GoogleSheetSync {
       constructor() {
         this.webAppUrl = "https://script.google.com/macros/s/AKfycbxB_-xgFxLbceRBIwSe1vHSiHy66pOEGk8jctqjCjF497iLvzKqvIlLle1RuIix8J9mnQ/exec";
       }
 
-      // 通过 JSONP 协议获取全量数据，彻底免疫移动端及跨域 CORS 拦截
       fetchAllViaJsonp() {
         return new Promise((resolve, reject) => {
           const callbackName = "jsonp_cb_" + Date.now() + "_" + Math.floor(Math.random() * 1000000);
@@ -763,7 +756,6 @@
         });
       }
 
-      // 提交增加、修改、删除操作
       async sendAction(action, payloadData) {
         const params = new URLSearchParams();
         params.append("action", action);
@@ -791,9 +783,6 @@
       }
     }
 
-    /**
-     * 核心应用逻辑控制器
-     */
     class FamilyFinanceApp {
       constructor() {
         this.transactions = [];
@@ -807,7 +796,6 @@
         this.bindEvents();
         this.syncWithGoogleSheet();
 
-        // 后台轮询：每 7 秒拉取 Google Sheets 最新修改
         setInterval(() => {
           this.syncWithGoogleSheet(true);
         }, 7000);
@@ -870,7 +858,7 @@
 
       loadLocalCache() {
         try {
-          const raw = localStorage.getItem("local_finance_records_v6_zh");
+          const raw = localStorage.getItem("local_finance_records_usdt_v1");
           if (raw) {
             this.transactions = JSON.parse(raw);
           } else {
@@ -883,7 +871,7 @@
       }
 
       saveLocalCache() {
-        localStorage.setItem("local_finance_records_v6_zh", JSON.stringify(this.transactions));
+        localStorage.setItem("local_finance_records_usdt_v1", JSON.stringify(this.transactions));
         this.render();
       }
 
@@ -919,7 +907,11 @@
       }
 
       formatCurrency(val) {
-        return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(val);
+        const num = parseFloat(Number(val).toFixed(2)) || 0;
+        return new Intl.NumberFormat("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }).format(num) + " USDT";
       }
 
       bindEvents() {
@@ -964,12 +956,12 @@
         document.getElementById("btnCancelBudget").addEventListener("click", closeBudgetModal);
 
         const executeAddBudget = async () => {
-          const amountVal = parseFloat(this.budgetAddAmount.value);
+          const amountVal = parseFloat(parseFloat(this.budgetAddAmount.value).toFixed(2));
           const noteVal = this.budgetAddNote.value.trim();
           const dateVal = this.budgetAddDate.value;
 
           if (isNaN(amountVal) || amountVal <= 0) {
-            alert("请输入大于 0 的有效注入金额。");
+            alert("请输入大于 0 的有效 USDT 注入金额。");
             this.budgetAddAmount.focus();
             return;
           }
@@ -1015,12 +1007,12 @@
         const executeSaveEditExpense = async () => {
           const id = this.editExpenseId.value;
           const desc = this.editExpenseDesc.value.trim();
-          const amount = parseFloat(this.editExpenseAmount.value);
+          const amount = parseFloat(parseFloat(this.editExpenseAmount.value).toFixed(2));
           const category = this.editExpenseCategory.value;
           const date = this.editExpenseDate.value;
 
           if (!desc || isNaN(amount) || amount <= 0 || !date) {
-            alert("请核对输入项，所有字段均为必填且金额需大于 0。");
+            alert("请核对输入项，所有字段均为必填且金额需大于 0 USDT。");
             return;
           }
 
@@ -1055,11 +1047,11 @@
         const executeSaveEditIncome = async () => {
           const id = this.editIncomeId.value;
           const note = this.editIncomeNote.value.trim();
-          const amount = parseFloat(this.editIncomeAmount.value);
+          const amount = parseFloat(parseFloat(this.editIncomeAmount.value).toFixed(2));
           const date = this.editIncomeDate.value;
 
           if (!note || isNaN(amount) || amount <= 0 || !date) {
-            alert("请输入有效的资金来源及金额。");
+            alert("请输入有效的资金来源及大于 0 的 USDT 金额。");
             return;
           }
 
@@ -1107,22 +1099,24 @@
           this.imagePickerEmpty.style.display = "none";
           this.btnRemovePreview.style.display = "flex";
 
-          this.showStatus("Gemini AI 正在智能识别凭证与账单内容...", "info");
+          this.showStatus("Gemini AI 正在智能识别凭证金额并提取为 USDT...", "info");
           const rawBase64 = base64Data.split(",")[1];
           const extracted = await this.callGeminiAPI(rawBase64);
 
           if (extracted) {
             if (extracted.description && !this.itemDesc.value) this.itemDesc.value = extracted.description;
-            if (extracted.amount && !this.itemAmount.value) this.itemAmount.value = extracted.amount;
+            if (extracted.amount && !this.itemAmount.value) {
+              this.itemAmount.value = parseFloat(Number(extracted.amount).toFixed(2));
+            }
             if (extracted.category) this.itemCategory.value = extracted.category;
             if (extracted.date) this.itemDate.value = extracted.date;
-            this.showStatus("AI 已成功提取并自动填充账单数据！", "success");
+            this.showStatus("AI 已成功提取并自动填充账单数据 (USDT)！", "success");
           } else {
             this.hideStatus();
           }
         } catch (err) {
           console.warn("AI 识别提示:", err.message);
-          this.showStatus("图片凭证已添加完毕 (可继续手动录入明细)。", "info");
+          this.showStatus("图片凭证已添加完毕 (可继续手动录入明细与金额)。", "info");
         } finally {
           this.imageInput.value = "";
           setTimeout(() => this.hideStatus(), 3500);
@@ -1173,10 +1167,10 @@
         const apiKey = ApiKeyProvider.get();
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
-        const prompt = `你是一名专业的家庭财务智能会计。请深度分析这张账单发票、收据凭证或转账截图，并提取核心信息，仅以严格的 JSON 纯文本格式输出（严禁包含任何 Markdown 格式代码块或额外说明文本）：
+        const prompt = `你是一名精通多币种与加密货币结算的财务会计专家。请深度分析这张账单发票、收据凭证或转账截图，提取核心信息并折算或提取为以 USDT 为单位的数值，必须严格以无 Markdown 代码块的纯 JSON 格式输出：
         {
           "description": "简明扼要的支出品名、服务或收款方",
-          "amount": 整数形式的金额数值,
+          "amount": 以USDT计价的正浮点数数值例如50.50或120.00,
           "category": "餐饮买菜 / 超市食材" | "公用事业 / 水电账单" | "交通出行 / 加油保养" | "居家日常 / 网购日用" | "医疗保健 / 药品门诊" | "教育培训 / 学习提升" | "其他杂项支出",
           "date": "YYYY-MM-DD"
         }`;
@@ -1229,12 +1223,12 @@
 
       async saveExpense() {
         const desc = this.itemDesc.value.trim();
-        const amount = parseFloat(this.itemAmount.value);
+        const amount = parseFloat(parseFloat(this.itemAmount.value).toFixed(2));
         const category = this.itemCategory.value;
         const date = this.itemDate.value;
 
         if (!desc || isNaN(amount) || amount <= 0 || !date) {
-          alert("请完整填写有效支出信息。");
+          alert("请完整填写有效支出信息且金额需大于 0 USDT。");
           return;
         }
 
@@ -1315,12 +1309,12 @@
           return;
         }
 
-        let csv = "\uFEFF日期,类型,所属分类,明细描述 / 资金来源,金额 (VNĐ),是否有凭证\n";
+        let csv = "\uFEFF日期,类型,所属分类,明细描述 / 资金来源,金额 (USDT),是否有凭证\n";
         this.transactions.forEach(item => {
           const typeStr = item.type === "income" ? "注入预算 (+)" : "日常支出 (-)";
           const safeDesc = `"${(item.desc || "").replace(/"/g, '""')}"`;
           const hasImg = item.receiptImage ? "有" : "无";
-          const amountFormatted = (item.type === "income" ? "+" : "-") + item.amount;
+          const amountFormatted = (item.type === "income" ? "+" : "-") + Number(item.amount).toFixed(2);
           csv += `${item.date},${typeStr},${item.category},${safeDesc},${amountFormatted},${hasImg}\n`;
         });
 
@@ -1328,7 +1322,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `家庭收支明细_${new Date().toISOString().split("T")[0]}.csv`;
+        a.download = `家庭收支明细_USDT_${new Date().toISOString().split("T")[0]}.csv`;
         a.click();
         URL.revokeObjectURL(url);
       }
@@ -1338,7 +1332,7 @@
         let totalExpense = 0;
 
         this.transactions.forEach(t => {
-          const amt = Number(t.amount) || 0;
+          const amt = parseFloat(Number(t.amount).toFixed(2)) || 0;
           if (t.type === "income") totalBudget += amt;
           else if (t.type === "expense") totalExpense += amt;
         });
