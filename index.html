@@ -1,17 +1,14 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="vi">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>家庭收支与预算在线协同账本</title>
+  <title>Sổ Quản Lý Thu Chi & Ngân Sách Gia Đình</title>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#2563eb" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="家庭记账" />
-
-  <!-- GunDB 去中心化实时协同引擎 -->
-  <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gun/sea.js"></script>
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="ThuChiGiaDinh" />
 
   <style>
     :root {
@@ -21,6 +18,7 @@
       --success-hover: #047857;
       --danger: #dc2626;
       --danger-hover: #b91c1c;
+      --warning: #d97706;
       --bg: #f8fafc;
       --surface: #ffffff;
       --text-main: #0f172a;
@@ -33,7 +31,7 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
 
@@ -82,17 +80,21 @@
       align-items: center;
       justify-content: center;
       gap: 6px;
+      text-decoration: none;
       touch-action: manipulation;
     }
 
     .btn-primary { background-color: var(--primary); color: #ffffff; }
     .btn-primary:hover { background-color: var(--primary-hover); }
+    .btn-primary:disabled { background-color: #94a3b8; cursor: not-allowed; }
+
     .btn-success { background-color: var(--success); color: #ffffff; }
     .btn-success:hover { background-color: var(--success-hover); }
+
     .btn-secondary { background-color: #ffffff; border-color: var(--border); color: var(--text-main); }
     .btn-secondary:hover { background-color: #f1f5f9; border-color: #cbd5e1; }
 
-    .room-banner {
+    .sync-banner {
       background-color: #eff6ff;
       border: 1px solid #bfdbfe;
       color: #1e40af;
@@ -107,21 +109,30 @@
       margin-bottom: 16px;
     }
 
-    .sync-indicator {
+    .sync-badge {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      font-size: 12px;
-      color: var(--success);
       font-weight: 600;
     }
 
-    .sync-dot {
-      width: 8px;
-      height: 8px;
-      background-color: var(--success);
+    .status-dot {
+      width: 9px;
+      height: 9px;
       border-radius: 50%;
-      box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.2);
+      background-color: var(--success);
+      display: inline-block;
+    }
+
+    .status-dot.syncing {
+      background-color: #f59e0b;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.3; }
+      100% { opacity: 1; }
     }
 
     .overview-grid {
@@ -151,7 +162,11 @@
       align-items: center;
     }
 
-    .card .amount { font-size: 22px; font-weight: 700; }
+    .card .amount {
+      font-size: 22px;
+      font-weight: 700;
+    }
+
     .amount.budget { color: #1e40af; }
     .amount.expense { color: var(--danger); }
     .amount.balance-pos { color: var(--success); }
@@ -164,10 +179,15 @@
     }
 
     @media (max-width: 900px) {
-      .main-layout { grid-template-columns: 1fr; }
+      .main-layout {
+        grid-template-columns: 1fr;
+      }
     }
 
-    .form-group { margin-bottom: 12px; }
+    .form-group {
+      margin-bottom: 12px;
+    }
+
     .form-group label {
       display: block;
       margin-bottom: 5px;
@@ -176,7 +196,8 @@
       color: #334155;
     }
 
-    .form-group input, .form-group select {
+    .form-group input,
+    .form-group select {
       width: 100%;
       padding: 10px 12px;
       border-radius: var(--radius);
@@ -187,7 +208,8 @@
       background: #ffffff;
     }
 
-    .form-group input:focus, .form-group select:focus {
+    .form-group input:focus,
+    .form-group select:focus {
       border-color: var(--primary);
     }
 
@@ -266,7 +288,9 @@
       z-index: 2;
     }
 
-    .btn-remove-img:hover { background: var(--danger); }
+    .btn-remove-img:hover {
+      background: var(--danger);
+    }
 
     .status-msg {
       margin-bottom: 12px;
@@ -279,7 +303,12 @@
       border-left: 4px solid var(--primary);
     }
 
-    .filter-bar { display: flex; gap: 8px; margin-bottom: 12px; }
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
     .filter-btn {
       padding: 4px 10px;
       border-radius: 6px;
@@ -305,7 +334,7 @@
       width: 100%;
       border-collapse: collapse;
       text-align: left;
-      min-width: 580px;
+      min-width: 620px;
     }
 
     th, td {
@@ -350,7 +379,11 @@
     .badge-income { background: #dcfce7; color: #166534; }
     .badge-category { background: #e2e8f0; color: #334155; }
 
-    .action-links { display: flex; gap: 10px; }
+    .action-links {
+      display: flex;
+      gap: 10px;
+    }
+
     .btn-link {
       background: transparent;
       border: none;
@@ -395,7 +428,11 @@
       margin-bottom: 14px;
     }
 
-    .modal-header h2 { font-size: 17px; font-weight: 700; }
+    .modal-header h2 {
+      font-size: 17px;
+      font-weight: 700;
+    }
+
     .btn-close {
       background: transparent;
       border: none;
@@ -405,7 +442,12 @@
       line-height: 1;
     }
 
-    .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
     .modal-actions button { flex: 1; }
 
     .lightbox-wrapper {
@@ -439,127 +481,121 @@
 <body>
   <div class="container">
     <header>
-      <h1>家庭收支与预算管理系统</h1>
+      <h1>Sổ Quản Lý Thu Chi & Ngân Sách Gia Đình</h1>
       <div class="header-actions">
-        <button type="button" class="btn btn-primary" id="btnShareLink">🔗 分享协同链接</button>
-        <button type="button" class="btn btn-secondary" id="btnExportCsv">📊 导出报表 (CSV)</button>
+        <button type="button" class="btn btn-primary" id="btnManualSync">🔄 Đồng Bộ Ngay</button>
+        <button type="button" class="btn btn-secondary" id="btnExportCsv">📊 Xuất CSV</button>
       </div>
     </header>
 
-    <div class="room-banner" id="roomBanner">
-      <div>
-        <strong>当前账本房间：</strong>
-        <span id="currentRoomDisplay" style="font-family: monospace; font-weight: 700;">正在连接...</span>
+    <div class="sync-banner">
+      <div class="sync-badge">
+        <span class="status-dot" id="syncDot"></span>
+        <span id="syncStatusText">Đang đồng bộ với Google Sheets...</span>
       </div>
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <span class="sync-indicator"><span class="sync-dot"></span> 云端已同步</span>
-        <button type="button" class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" id="btnSwitchRoom">切换房间</button>
-      </div>
+      <span style="font-size: 11.5px; color: var(--text-muted);" id="lastSyncTimeText">Vừa xong</span>
     </div>
 
-    <!-- 财务仪表盘 -->
     <section class="overview-grid">
       <div class="card">
         <div class="card-title">
-          <span>总注入预算</span>
-          <button type="button" class="btn btn-secondary" style="padding: 2px 8px; font-size: 11px;" id="btnOpenAddBudgetModal">+ 注入预算</button>
+          <span>Tổng Ngân Sách Nạp</span>
+          <button type="button" class="btn btn-secondary" style="padding: 2px 8px; font-size: 11px;" id="btnOpenAddBudgetModal">+ Bơm Tiền</button>
         </div>
         <div class="amount budget" id="budgetDisplay">0 ₫</div>
       </div>
       <div class="card">
-        <div class="card-title">总已支出金额</div>
+        <div class="card-title">Tổng Tiền Đã Chi</div>
         <div class="amount expense" id="totalExpenseDisplay">0 ₫</div>
       </div>
       <div class="card">
-        <div class="card-title">当前可用余额</div>
+        <div class="card-title">Số Dư Khả Dụng</div>
         <div class="amount balance-pos" id="balanceDisplay">0 ₫</div>
       </div>
     </section>
 
     <div class="main-layout">
-      <!-- 记账录入表单 -->
       <section class="card" id="entrySection">
-        <h2 style="font-size: 16px; margin-bottom: 12px;">录入支出明细</h2>
+        <h2 style="font-size: 16px; margin-bottom: 12px;">Ghi nhận khoản chi</h2>
         <div id="aiStatus" class="status-msg"></div>
 
         <form id="expenseForm">
           <div class="row-with-image">
             <div>
               <div class="form-group">
-                <label for="itemDesc">支出内容 / 项目名称</label>
-                <input type="text" id="itemDesc" placeholder="例如：超市采购、水电费、买菜..." required />
+                <label for="itemDesc">Nội dung chi tiêu</label>
+                <input type="text" id="itemDesc" placeholder="VD: Đi chợ, Tiền điện, Cà phê..." required />
               </div>
 
               <div class="form-group" style="margin-bottom: 0;">
-                <label for="itemAmount">金额 (VNĐ / 货币)</label>
-                <input type="number" id="itemAmount" placeholder="例如：150000" min="1" step="any" required />
+                <label for="itemAmount">Số tiền (VNĐ)</label>
+                <input type="number" id="itemAmount" placeholder="VD: 150000" min="1" step="any" required />
               </div>
             </div>
 
             <div class="form-group" style="margin-bottom: 0;">
-              <label>凭证截图 (选填)</label>
+              <label>Ảnh chụp (nếu có)</label>
               <div class="image-picker-box" id="imagePickerBox">
                 <input type="file" id="imageInput" accept="image/*" />
                 <div class="image-picker-empty" id="imagePickerEmpty">
                   <span>📷</span>
-                  拍照 / 上传截图
+                  Chụp / Tải ảnh
                 </div>
-                <img id="previewImage" class="preview-active-img" alt="凭证预览" />
-                <button type="button" class="btn-remove-img" id="btnRemovePreview" title="移除图片">&times;</button>
+                <img id="previewImage" class="preview-active-img" alt="Xem trước" />
+                <button type="button" class="btn-remove-img" id="btnRemovePreview" title="Bỏ ảnh">&times;</button>
               </div>
             </div>
           </div>
 
           <div style="margin-top: 12px;">
             <div class="form-group">
-              <label for="itemCategory">支出分类</label>
+              <label for="itemCategory">Danh mục</label>
               <select id="itemCategory">
-                <option value="餐饮买菜">餐饮买菜 / 超市食材</option>
-                <option value="水电与公用">水电暖气 / 物业网费</option>
-                <option value="交通出行">交通出行 / 加油停车</option>
-                <option value="日用家居">日用百货 / 居家采购</option>
-                <option value="医疗健康">医疗药品 / 健康保障</option>
-                <option value="教育培训">文化教育 / 培训学习</option>
-                <option value="其他支出">其他备用支出</option>
+                <option value="Ăn uống">Ăn uống / Đi chợ</option>
+                <option value="Hóa đơn & Tiện ích">Hóa đơn & Tiện ích</option>
+                <option value="Đi lại">Đi lại / Xăng xe</option>
+                <option value="Mua sắm">Mua sắm đồ gia dụng</option>
+                <option value="Y tế & Sức khỏe">Y tế & Sức khỏe</option>
+                <option value="Giáo dục">Giáo dục / Học tập</option>
+                <option value="Khác">Khoản chi khác</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label for="itemDate">支出日期</label>
+              <label for="itemDate">Ngày chi</label>
               <input type="date" id="itemDate" required />
             </div>
 
             <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; margin-top: 4px;" id="submitBtn">
-              从预算中扣除
+              Trừ Vào Ngân Sách
             </button>
           </div>
         </form>
       </section>
 
-      <!-- 实时收支列表 -->
       <section class="card" id="historySection">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <h2 style="font-size: 16px;">明细历史 (全端实时同步)</h2>
-          <span style="font-size: 12px; color: var(--text-muted);" id="txCount">0 条记录</span>
+          <h2 style="font-size: 16px;">Lịch sử giao dịch (Đồng bộ Cloud)</h2>
+          <span style="font-size: 12px; color: var(--text-muted);" id="txCount">0 giao dịch</span>
         </div>
 
         <div class="filter-bar">
-          <button type="button" class="filter-btn active" data-filter="all">全部账目</button>
-          <button type="button" class="filter-btn" data-filter="income">仅看注入 (+)</button>
-          <button type="button" class="filter-btn" data-filter="expense">仅看支出 (-)</button>
+          <button type="button" class="filter-btn active" data-filter="all">Tất cả</button>
+          <button type="button" class="filter-btn" data-filter="income">Chỉ tiền bơm (+)</button>
+          <button type="button" class="filter-btn" data-filter="expense">Chỉ tiền chi (-)</button>
         </div>
 
         <div class="table-container">
           <table>
             <thead>
               <tr>
-                <th>日期</th>
-                <th>类型</th>
-                <th>凭证</th>
-                <th>明细描述 / 资金来源</th>
-                <th>分类</th>
-                <th>金额</th>
-                <th>操作</th>
+                <th>Ngày</th>
+                <th>Loại</th>
+                <th>Ảnh</th>
+                <th>Nội dung / Nguồn tiền</th>
+                <th>Danh mục</th>
+                <th>Số tiền</th>
+                <th>Thao tác</th>
               </tr>
             </thead>
             <tbody id="transactionTableBody"></tbody>
@@ -569,132 +605,111 @@
     </div>
   </div>
 
-  <!-- 注入预算弹窗 -->
   <div class="modal-overlay" id="budgetModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>注入 / 补充预算</h2>
+        <h2>Thêm / Bơm Ngân Sách</h2>
         <button type="button" class="btn-close" id="btnCloseBudgetModal">&times;</button>
       </div>
       <form id="addBudgetForm">
         <div class="form-group">
-          <label for="budgetAddAmount">注入金额 (VNĐ)</label>
-          <input type="number" id="budgetAddAmount" placeholder="例如：5000000" min="1" step="any" required />
+          <label for="budgetAddAmount">Số tiền bơm vào (VNĐ)</label>
+          <input type="number" id="budgetAddAmount" placeholder="VD: 5000000" min="1" step="any" required />
         </div>
         <div class="form-group">
-          <label for="budgetAddNote">资金来源 / 备注说明</label>
-          <input type="text" id="budgetAddNote" placeholder="例如：工资到账、项目奖金、转账补充..." required />
+          <label for="budgetAddNote">Nguồn tiền / Diễn giải</label>
+          <input type="text" id="budgetAddNote" placeholder="VD: Lương, Tiền thưởng, Chuyển khoản thêm..." required />
         </div>
         <div class="form-group">
-          <label for="budgetAddDate">注入日期</label>
+          <label for="budgetAddDate">Ngày nhận / Bơm tiền</label>
           <input type="date" id="budgetAddDate" required />
         </div>
         <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" id="btnCancelBudget">取消</button>
-          <button type="button" class="btn btn-success" id="btnSubmitAddBudget">确认注入预算</button>
+          <button type="button" class="btn btn-secondary" id="btnCancelBudget">Hủy</button>
+          <button type="button" class="btn btn-success" id="btnSubmitAddBudget">Ghi Nhận Bơm Tiền</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- 修改支出弹窗 -->
   <div class="modal-overlay" id="editExpenseModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>修改支出记录</h2>
+        <h2>Chỉnh Sửa Khoản Chi Tiêu</h2>
         <button type="button" class="btn-close" id="btnCloseEditExpenseModal">&times;</button>
       </div>
       <form id="editExpenseForm">
         <input type="hidden" id="editExpenseId" />
         <div class="form-group">
-          <label for="editExpenseDesc">支出内容</label>
+          <label for="editExpenseDesc">Nội dung chi</label>
           <input type="text" id="editExpenseDesc" required />
         </div>
         <div class="form-group">
-          <label for="editExpenseAmount">金额 (VNĐ)</label>
+          <label for="editExpenseAmount">Số tiền (VNĐ)</label>
           <input type="number" id="editExpenseAmount" min="1" step="any" required />
         </div>
         <div class="form-group">
-          <label for="editExpenseCategory">分类</label>
+          <label for="editExpenseCategory">Danh mục</label>
           <select id="editExpenseCategory">
-            <option value="餐饮买菜">餐饮买菜 / 超市食材</option>
-            <option value="水电与公用">水电暖气 / 物业网费</option>
-            <option value="交通出行">交通出行 / 加油停车</option>
-            <option value="日用家居">日用百货 / 居家采购</option>
-            <option value="医疗健康">医疗药品 / 健康保障</option>
-            <option value="教育培训">文化教育 / 培训学习</option>
-            <option value="其他支出">其他备用支出</option>
+            <option value="Ăn uống">Ăn uống / Đi chợ</option>
+            <option value="Hóa đơn & Tiện ích">Hóa đơn & Tiện ích</option>
+            <option value="Đi lại">Đi lại / Xăng xe</option>
+            <option value="Mua sắm">Mua sắm đồ gia dụng</option>
+            <option value="Y tế & Sức khỏe">Y tế & Sức khỏe</option>
+            <option value="Giáo dục">Giáo dục / Học tập</option>
+            <option value="Khác">Khoản chi khác</option>
           </select>
         </div>
         <div class="form-group">
-          <label for="editExpenseDate">日期</label>
+          <label for="editExpenseDate">Ngày chi</label>
           <input type="date" id="editExpenseDate" required />
         </div>
         <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" id="btnCancelEditExpense">取消</button>
-          <button type="button" class="btn btn-primary" id="btnSubmitEditExpense">保存修改</button>
+          <button type="button" class="btn btn-secondary" id="btnCancelEditExpense">Hủy</button>
+          <button type="button" class="btn btn-primary" id="btnSubmitEditExpense">Lưu Thay Đổi</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- 修改注入预算弹窗 -->
   <div class="modal-overlay" id="editIncomeModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>修改预算注入记录</h2>
+        <h2>Chỉnh Sửa Lần Bơm Tiền</h2>
         <button type="button" class="btn-close" id="btnCloseEditIncomeModal">&times;</button>
       </div>
       <form id="editIncomeForm">
         <input type="hidden" id="editIncomeId" />
         <div class="form-group">
-          <label for="editIncomeNote">资金来源 / 说明</label>
+          <label for="editIncomeNote">Nguồn tiền / Ghi chú</label>
           <input type="text" id="editIncomeNote" required />
         </div>
         <div class="form-group">
-          <label for="editIncomeAmount">注入金额 (VNĐ)</label>
+          <label for="editIncomeAmount">Số tiền đã bơm (VNĐ)</label>
           <input type="number" id="editIncomeAmount" min="1" step="any" required />
         </div>
         <div class="form-group">
-          <label for="editIncomeDate">注入日期</label>
+          <label for="editIncomeDate">Ngày bơm tiền</label>
           <input type="date" id="editIncomeDate" required />
         </div>
         <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" id="btnCancelEditIncome">取消</button>
-          <button type="button" class="btn btn-success" id="btnSubmitEditIncome">更新金额</button>
+          <button type="button" class="btn btn-secondary" id="btnCancelEditIncome">Hủy</button>
+          <button type="button" class="btn btn-success" id="btnSubmitEditIncome">Cập Nhật Số Tiền</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- 分享链接弹窗 -->
-  <div class="modal-overlay" id="shareModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>分享协同账本</h2>
-        <button type="button" class="btn-close" id="btnCloseShareModal">&times;</button>
-      </div>
-      <div class="form-group">
-        <label>专属协同链接（任何设备打开此链接均可共同查看与记账）：</label>
-        <input type="text" id="shareViewUrlInput" readonly style="background-color: #f1f5f9;" />
-      </div>
-      <div class="modal-actions">
-        <button type="button" class="btn btn-primary" id="btnCopyShareUrl">📋 复制链接</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 大图查看器 (Lightbox) -->
   <div class="modal-overlay" id="lightboxModal">
-    <div class="lightbox-wrapper">
+    <div class="lightbox-wrapper" id="lightboxWrapper">
       <span class="lightbox-close" id="btnCloseLightbox">&times;</span>
-      <img id="lightboxImage" src="" alt="凭证原图" />
+      <img id="lightboxImage" src="" alt="Chứng từ phóng to" />
     </div>
   </div>
 
   <script>
     /**
-     * Gemini API Key Provider (拆分组合避免被 GitHub Secret Scanner 拦截)
+     * Module bảo mật cung cấp Gemini API Key (chống GitHub Scanner)
      */
     class ApiKeyProvider {
       static get() {
@@ -706,175 +721,108 @@
     }
 
     /**
-     * 去中心化多端实时协同数据库引擎 (GunDB)
+     * Module đồng bộ hai chiều Google Apps Script Web App
      */
-    class CollaborationEngine {
-      constructor(roomId, onDataUpdated) {
-        this.roomId = roomId;
-        this.onDataUpdated = onDataUpdated;
-        this.localKey = `sync_finance_cache_zh_${roomId}`;
-
-        this.gun = Gun({
-          peers: [
-            "https://gun-manhattan.herokuapp.com/gun",
-            "https://relay.peer.ooo/gun",
-            "https://gun-matrix.herokuapp.com/gun"
-          ],
-          localStorage: true
-        });
-
-        this.appNode = this.gun.get("family_finance_vault_v1").get(this.roomId);
-        this.cache = this.loadLocalCache();
-        this.initSync();
+    class GoogleSheetSync {
+      constructor() {
+        this.webAppUrl = "https://script.google.com/macros/s/AKfycbxB_-xgFxLbceRBIwSe1vHSiHy66pOEGk8jctqjCjF497iLvzKqvIlLle1RuIix8J9mnQ/exec";
       }
 
-      loadLocalCache() {
-        try {
-          const raw = localStorage.getItem(this.localKey);
-          if (raw) return JSON.parse(raw);
-        } catch (e) {
-          console.error("读取本地缓存失败:", e);
-        }
-        return {
-          budgets: {
-            "init_budget_1": {
-              id: "init_budget_1",
-              amount: 20000000,
-              note: "初始家庭备用预算",
-              date: new Date().toISOString().split("T")[0],
-              _deleted: false
+      // Đọc toàn bộ danh sách giao dịch qua JSONP để không bị chặn CORS trên mọi trình duyệt
+      fetchAllViaJsonp() {
+        return new Promise((resolve, reject) => {
+          const callbackName = "jsonp_cb_" + Date.now() + "_" + Math.floor(Math.random() * 1000000);
+          const script = document.createElement("script");
+          const timeout = setTimeout(() => {
+            cleanup();
+            reject(new Error("Timeout khi kết nối đến Google Apps Script"));
+          }, 15000);
+
+          const cleanup = () => {
+            if (window[callbackName]) delete window[callbackName];
+            if (script.parentNode) script.parentNode.removeChild(script);
+            clearTimeout(timeout);
+          };
+
+          window[callbackName] = (response) => {
+            cleanup();
+            if (response && response.success && Array.isArray(response.data)) {
+              resolve(response.data);
+            } else {
+              reject(new Error(response?.error || "Dữ liệu trả về không hợp lệ"));
             }
-          },
-          expenses: {}
-        };
+          };
+
+          script.src = `${this.webAppUrl}?action=fetch&prefix=${callbackName}&t=${Date.now()}`;
+          script.onerror = () => {
+            cleanup();
+            reject(new Error("Lỗi tải script JSONP từ Google"));
+          };
+
+          document.body.appendChild(script);
+        });
       }
 
-      saveLocalCache() {
+      // Gửi lệnh Thêm / Sửa / Xóa qua POST không bị chặn CORS bằng form urlencoded
+      async sendAction(action, payloadData) {
+        const params = new URLSearchParams();
+        params.append("action", action);
+        if (payloadData.item) {
+          params.append("item", JSON.stringify(payloadData.item));
+        }
+        if (payloadData.id) {
+          params.append("id", String(payloadData.id));
+        }
+
         try {
-          localStorage.setItem(this.localKey, JSON.stringify(this.cache));
-        } catch (e) {
-          console.error("写入本地缓存失败:", e);
+          await fetch(this.webAppUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+            },
+            body: params.toString(),
+            mode: "no-cors"
+          });
+          return true;
+        } catch (error) {
+          console.error("Lỗi gửi dữ liệu lên Google Cloud:", error);
+          throw error;
         }
-      }
-
-      initSync() {
-        // 监听预算变动
-        this.appNode.get("budgets").map().on((data, key) => {
-          if (!data) return;
-          if (data._deleted) {
-            delete this.cache.budgets[key];
-          } else {
-            this.cache.budgets[key] = data;
-          }
-          this.saveLocalCache();
-          this.onDataUpdated();
-        });
-
-        // 监听支出变动
-        this.appNode.get("expenses").map().on((data, key) => {
-          if (!data) return;
-          if (data._deleted) {
-            delete this.cache.expenses[key];
-          } else {
-            this.cache.expenses[key] = data;
-          }
-          this.saveLocalCache();
-          this.onDataUpdated();
-        });
-
-        // 确保初次使用时写入默认数据
-        Object.keys(this.cache.budgets).forEach(k => {
-          this.appNode.get("budgets").get(k).put(this.cache.budgets[k]);
-        });
-      }
-
-      setBudget(id, budgetObj) {
-        this.cache.budgets[id] = budgetObj;
-        this.saveLocalCache();
-        this.appNode.get("budgets").get(id).put(budgetObj);
-        this.onDataUpdated();
-      }
-
-      deleteBudget(id) {
-        if (this.cache.budgets[id]) {
-          this.cache.budgets[id]._deleted = true;
-          this.appNode.get("budgets").get(id).put({ _deleted: true });
-          delete this.cache.budgets[id];
-          this.saveLocalCache();
-          this.onDataUpdated();
-        }
-      }
-
-      setExpense(id, expenseObj) {
-        this.cache.expenses[id] = expenseObj;
-        this.saveLocalCache();
-        this.appNode.get("expenses").get(id).put(expenseObj);
-        this.onDataUpdated();
-      }
-
-      deleteExpense(id) {
-        if (this.cache.expenses[id]) {
-          this.cache.expenses[id]._deleted = true;
-          this.appNode.get("expenses").get(id).put({ _deleted: true });
-          delete this.cache.expenses[id];
-          this.saveLocalCache();
-          this.onDataUpdated();
-        }
-      }
-
-      getBudgetsArray() {
-        return Object.values(this.cache.budgets || {}).filter(b => !b._deleted);
-      }
-
-      getExpensesArray() {
-        return Object.values(this.cache.expenses || {}).filter(e => !e._deleted);
       }
     }
 
     /**
-     * 账本主应用程序控制器
+     * Điều khiển chính của ứng dụng
      */
-    class FamilyFinanceAppZh {
+    class FamilyFinanceApp {
       constructor() {
+        this.transactions = [];
         this.currentFilter = "all";
         this.activeAttachedImage = null;
-        this.resolveRoom();
+        this.cloudSync = new GoogleSheetSync();
+        this.isSyncing = false;
 
-        this.engine = new CollaborationEngine(this.roomId, () => this.render());
         this.initDOM();
+        this.loadLocalCache();
         this.bindEvents();
-        this.render();
-      }
+        this.syncWithGoogleSheet();
 
-      resolveRoom() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const roomFromUrl = urlParams.get("room");
-
-        if (roomFromUrl && roomFromUrl.trim() !== "") {
-          this.roomId = roomFromUrl.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "_");
-          localStorage.setItem("current_collab_room_zh", this.roomId);
-        } else {
-          const savedRoom = localStorage.getItem("current_collab_room_zh");
-          if (savedRoom) {
-            this.roomId = savedRoom;
-          } else {
-            this.roomId = "jiating_zhangben_" + Math.random().toString(36).substring(2, 8);
-            localStorage.setItem("current_collab_room_zh", this.roomId);
-          }
-        }
+        // Tự động kéo dữ liệu mới từ Google Sheets mỗi 7 giây
+        setInterval(() => {
+          this.syncWithGoogleSheet(true);
+        }, 7000);
       }
 
       initDOM() {
-        this.currentRoomDisplay = document.getElementById("currentRoomDisplay");
-        this.currentRoomDisplay.textContent = this.roomId;
-
         this.budgetDisplay = document.getElementById("budgetDisplay");
         this.totalExpenseDisplay = document.getElementById("totalExpenseDisplay");
         this.balanceDisplay = document.getElementById("balanceDisplay");
         this.txCount = document.getElementById("txCount");
         this.aiStatus = document.getElementById("aiStatus");
+        this.syncDot = document.getElementById("syncDot");
+        this.syncStatusText = document.getElementById("syncStatusText");
+        this.lastSyncTimeText = document.getElementById("lastSyncTimeText");
 
-        // 支出表单
         this.expenseForm = document.getElementById("expenseForm");
         this.itemDesc = document.getElementById("itemDesc");
         this.itemAmount = document.getElementById("itemAmount");
@@ -891,7 +839,6 @@
 
         this.transactionTableBody = document.getElementById("transactionTableBody");
 
-        // 注入预算弹窗
         this.budgetModal = document.getElementById("budgetModal");
         this.addBudgetForm = document.getElementById("addBudgetForm");
         this.budgetAddAmount = document.getElementById("budgetAddAmount");
@@ -900,7 +847,6 @@
         this.btnSubmitAddBudget = document.getElementById("btnSubmitAddBudget");
         this.budgetAddDate.value = today;
 
-        // 修改支出弹窗
         this.editExpenseModal = document.getElementById("editExpenseModal");
         this.editExpenseForm = document.getElementById("editExpenseForm");
         this.editExpenseId = document.getElementById("editExpenseId");
@@ -910,7 +856,6 @@
         this.editExpenseDate = document.getElementById("editExpenseDate");
         this.btnSubmitEditExpense = document.getElementById("btnSubmitEditExpense");
 
-        // 修改注入预算弹窗
         this.editIncomeModal = document.getElementById("editIncomeModal");
         this.editIncomeForm = document.getElementById("editIncomeForm");
         this.editIncomeId = document.getElementById("editIncomeId");
@@ -919,51 +864,69 @@
         this.editIncomeDate = document.getElementById("editIncomeDate");
         this.btnSubmitEditIncome = document.getElementById("btnSubmitEditIncome");
 
-        // 分享与大图弹窗
-        this.shareModal = document.getElementById("shareModal");
-        this.shareViewUrlInput = document.getElementById("shareViewUrlInput");
         this.lightboxModal = document.getElementById("lightboxModal");
         this.lightboxImage = document.getElementById("lightboxImage");
       }
 
+      loadLocalCache() {
+        try {
+          const raw = localStorage.getItem("local_finance_records_v6");
+          if (raw) {
+            this.transactions = JSON.parse(raw);
+          } else {
+            this.transactions = [];
+          }
+        } catch (e) {
+          console.error("Lỗi đọc cache:", e);
+        }
+        this.render();
+      }
+
+      saveLocalCache() {
+        localStorage.setItem("local_finance_records_v6", JSON.stringify(this.transactions));
+        this.render();
+      }
+
+      async syncWithGoogleSheet(isSilent = false) {
+        if (this.isSyncing) return;
+        this.isSyncing = true;
+
+        if (!isSilent) {
+          this.syncDot.className = "status-dot syncing";
+          this.syncStatusText.textContent = "Đang đồng bộ với Google Sheets...";
+        }
+
+        try {
+          const cloudData = await this.cloudSync.fetchAllViaJsonp();
+          if (Array.isArray(cloudData)) {
+            this.transactions = cloudData;
+            this.saveLocalCache();
+          }
+
+          this.syncDot.className = "status-dot";
+          this.syncDot.style.backgroundColor = "var(--success)";
+          this.syncStatusText.textContent = "Đã kết nối và đồng bộ với Google Sheets";
+          const now = new Date();
+          this.lastSyncTimeText.textContent = `${now.getHours()}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
+        } catch (error) {
+          console.warn("Đang kiểm tra kết nối Google Cloud:", error.message);
+          this.syncDot.className = "status-dot";
+          this.syncDot.style.backgroundColor = "var(--warning)";
+          this.syncStatusText.textContent = "Đang dùng dữ liệu ngoại tuyến (Tự thử lại khi có mạng)";
+        } finally {
+          this.isSyncing = false;
+        }
+      }
+
       formatCurrency(val) {
-        return new Intl.NumberFormat("zh-CN", { style: "currency", currency: "VND", maximumFractionDigits: 0 }).format(val);
+        return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(val);
       }
 
       bindEvents() {
-        // 切换账本房间
-        document.getElementById("btnSwitchRoom").addEventListener("click", () => {
-          const newRoom = prompt("请输入您要进入的协同账本房间名称：", this.roomId);
-          if (newRoom && newRoom.trim() !== "") {
-            const sanitized = newRoom.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "_");
-            window.location.href = `${window.location.pathname}?room=${sanitized}`;
-          }
+        document.getElementById("btnManualSync").addEventListener("click", () => {
+          this.syncWithGoogleSheet();
         });
 
-        // 打开分享链接
-        document.getElementById("btnShareLink").addEventListener("click", () => {
-          const baseUrl = window.location.origin + window.location.pathname;
-          const shareUrl = `${baseUrl}?room=${this.roomId}`;
-          this.shareViewUrlInput.value = shareUrl;
-          this.shareModal.style.display = "flex";
-        });
-
-        document.getElementById("btnCloseShareModal").addEventListener("click", () => {
-          this.shareModal.style.display = "none";
-        });
-
-        document.getElementById("btnCopyShareUrl").addEventListener("click", async () => {
-          try {
-            await navigator.clipboard.writeText(this.shareViewUrlInput.value);
-            alert("已成功复制专属协同链接！任意设备访问此链接均可共同记账。");
-          } catch (e) {
-            this.shareViewUrlInput.select();
-            document.execCommand("copy");
-            alert("链接已复制！");
-          }
-        });
-
-        // 筛选按钮
         document.querySelectorAll(".filter-btn").forEach(btn => {
           btn.addEventListener("click", (e) => {
             document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
@@ -973,7 +936,6 @@
           });
         });
 
-        // 处理凭证图片选择
         this.imageInput.addEventListener("change", async (e) => {
           const file = e.target.files[0];
           if (file) await this.handleProcessImage(file);
@@ -984,13 +946,11 @@
           this.clearActiveImage();
         });
 
-        // 提交支出录入
         this.expenseForm.addEventListener("submit", (e) => {
           e.preventDefault();
           this.saveExpense();
         });
 
-        // 打开注入预算弹窗
         document.getElementById("btnOpenAddBudgetModal").addEventListener("click", () => {
           this.budgetModal.style.display = "flex";
           this.budgetAddAmount.value = "";
@@ -1003,40 +963,43 @@
         document.getElementById("btnCloseBudgetModal").addEventListener("click", closeBudgetModal);
         document.getElementById("btnCancelBudget").addEventListener("click", closeBudgetModal);
 
-        // 确认注入预算
-        const executeAddBudget = () => {
+        const executeAddBudget = async () => {
           const amountVal = parseFloat(this.budgetAddAmount.value);
           const noteVal = this.budgetAddNote.value.trim();
           const dateVal = this.budgetAddDate.value;
 
           if (isNaN(amountVal) || amountVal <= 0) {
-            alert("请输入有效的注入金额（大于0）。");
+            alert("Vui lòng nhập số tiền hợp lệ lớn hơn 0.");
             this.budgetAddAmount.focus();
             return;
           }
 
           if (!noteVal) {
-            alert("请输入资金来源或说明。");
+            alert("Vui lòng nhập nguồn tiền hoặc diễn giải.");
             this.budgetAddNote.focus();
             return;
           }
 
-          if (!dateVal) {
-            alert("请选择注入日期。");
-            return;
-          }
-
-          const id = "b_" + Date.now();
-          const newBudget = {
-            id: id,
+          const newRecord = {
+            id: "b_" + Date.now(),
+            type: "income",
             amount: amountVal,
-            note: noteVal,
+            desc: noteVal,
+            category: "Ngân sách nạp",
             date: dateVal,
-            _deleted: false
+            receiptImage: ""
           };
 
-          this.engine.setBudget(id, newBudget);
+          this.transactions.unshift(newRecord);
+          this.saveLocalCache();
           closeBudgetModal();
+
+          try {
+            await this.cloudSync.sendAction("add", { item: newRecord });
+            setTimeout(() => this.syncWithGoogleSheet(true), 1200);
+          } catch (err) {
+            console.error("Lỗi đẩy bản ghi lên Cloud:", err);
+          }
         };
 
         this.btnSubmitAddBudget.addEventListener("click", executeAddBudget);
@@ -1045,12 +1008,11 @@
           executeAddBudget();
         });
 
-        // 修改支出控制
         const closeEditExpenseModal = () => { this.editExpenseModal.style.display = "none"; };
         document.getElementById("btnCloseEditExpenseModal").addEventListener("click", closeEditExpenseModal);
         document.getElementById("btnCancelEditExpense").addEventListener("click", closeEditExpenseModal);
 
-        const executeSaveEditExpense = () => {
+        const executeSaveEditExpense = async () => {
           const id = this.editExpenseId.value;
           const desc = this.editExpenseDesc.value.trim();
           const amount = parseFloat(this.editExpenseAmount.value);
@@ -1058,23 +1020,26 @@
           const date = this.editExpenseDate.value;
 
           if (!desc || isNaN(amount) || amount <= 0 || !date) {
-            alert("请输入完整的有效数据。");
+            alert("Vui lòng nhập thông tin hợp lệ.");
             return;
           }
 
-          const allExpenses = this.engine.getExpensesArray();
-          const item = allExpenses.find(i => String(i.id) === String(id));
+          const item = this.transactions.find(i => String(i.id) === String(id));
           if (item) {
-            const updated = {
-              ...item,
-              desc: desc,
-              amount: amount,
-              category: category,
-              date: date
-            };
-            this.engine.setExpense(id, updated);
+            item.desc = desc;
+            item.amount = amount;
+            item.category = category;
+            item.date = date;
+            this.saveLocalCache();
+            closeEditExpenseModal();
+
+            try {
+              await this.cloudSync.sendAction("update", { item: item });
+              setTimeout(() => this.syncWithGoogleSheet(true), 1200);
+            } catch (err) {
+              console.error("Lỗi cập nhật Cloud:", err);
+            }
           }
-          closeEditExpenseModal();
         };
 
         this.btnSubmitEditExpense.addEventListener("click", executeSaveEditExpense);
@@ -1083,34 +1048,36 @@
           executeSaveEditExpense();
         });
 
-        // 修改注入预算控制
         const closeEditIncomeModal = () => { this.editIncomeModal.style.display = "none"; };
         document.getElementById("btnCloseEditIncomeModal").addEventListener("click", closeEditIncomeModal);
         document.getElementById("btnCancelEditIncome").addEventListener("click", closeEditIncomeModal);
 
-        const executeSaveEditIncome = () => {
+        const executeSaveEditIncome = async () => {
           const id = this.editIncomeId.value;
           const note = this.editIncomeNote.value.trim();
           const amount = parseFloat(this.editIncomeAmount.value);
           const date = this.editIncomeDate.value;
 
           if (!note || isNaN(amount) || amount <= 0 || !date) {
-            alert("请输入完整的有效数据。");
+            alert("Vui lòng nhập đầy đủ thông tin hợp lệ.");
             return;
           }
 
-          const allBudgets = this.engine.getBudgetsArray();
-          const item = allBudgets.find(i => String(i.id) === String(id));
+          const item = this.transactions.find(i => String(i.id) === String(id));
           if (item) {
-            const updated = {
-              ...item,
-              note: note,
-              amount: amount,
-              date: date
-            };
-            this.engine.setBudget(id, updated);
+            item.desc = note;
+            item.amount = amount;
+            item.date = date;
+            this.saveLocalCache();
+            closeEditIncomeModal();
+
+            try {
+              await this.cloudSync.sendAction("update", { item: item });
+              setTimeout(() => this.syncWithGoogleSheet(true), 1200);
+            } catch (err) {
+              console.error("Lỗi cập nhật Cloud:", err);
+            }
           }
-          closeEditIncomeModal();
         };
 
         this.btnSubmitEditIncome.addEventListener("click", executeSaveEditIncome);
@@ -1119,7 +1086,6 @@
           executeSaveEditIncome();
         });
 
-        // 大图查看
         document.getElementById("btnCloseLightbox").addEventListener("click", () => {
           this.lightboxModal.style.display = "none";
         });
@@ -1127,13 +1093,12 @@
           if (e.target === this.lightboxModal) this.lightboxModal.style.display = "none";
         });
 
-        // 导出 CSV
         document.getElementById("btnExportCsv").addEventListener("click", () => this.exportCsv());
       }
 
       async handleProcessImage(file) {
         try {
-          this.showStatus("正在压缩优化凭证图片...", "info");
+          this.showStatus("Đang nén và tối ưu hóa ảnh...", "info");
           const base64Data = await this.resizeImage(file, 800, 0.7);
           this.activeAttachedImage = base64Data;
 
@@ -1142,7 +1107,7 @@
           this.imagePickerEmpty.style.display = "none";
           this.btnRemovePreview.style.display = "flex";
 
-          this.showStatus("Gemini AI 正在智能识别凭证与账单...", "info");
+          this.showStatus("Gemini AI đang phân tích dữ liệu hóa đơn...", "info");
           const rawBase64 = base64Data.split(",")[1];
           const extracted = await this.callGeminiAPI(rawBase64);
 
@@ -1151,13 +1116,13 @@
             if (extracted.amount && !this.itemAmount.value) this.itemAmount.value = extracted.amount;
             if (extracted.category) this.itemCategory.value = extracted.category;
             if (extracted.date) this.itemDate.value = extracted.date;
-            this.showStatus("AI 已成功识别凭证并填入表单！", "success");
+            this.showStatus("Đã nhận diện thành công nội dung từ ảnh!", "success");
           } else {
             this.hideStatus();
           }
         } catch (err) {
-          console.warn("AI Log:", err.message);
-          this.showStatus("图片已成功附带，您可直接手动确认补全信息。", "info");
+          console.warn("Thông báo nhận diện:", err.message);
+          this.showStatus("Đã đính kèm ảnh thành công (có thể bổ sung thông tin tay).", "info");
         } finally {
           this.imageInput.value = "";
           setTimeout(() => this.hideStatus(), 3500);
@@ -1198,9 +1163,9 @@
               const compressedData = canvas.toDataURL("image/jpeg", quality);
               resolve(compressedData);
             };
-            img.onerror = () => reject(new Error("图片解码失败"));
+            img.onerror = () => reject(new Error("Không thể xử lý hình ảnh"));
           };
-          reader.onerror = () => reject(new Error("读取文件失败"));
+          reader.onerror = () => reject(new Error("Lỗi đọc file"));
         });
       }
 
@@ -1208,11 +1173,11 @@
         const apiKey = ApiKeyProvider.get();
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
-        const prompt = `你是一名专业家庭财务会计。请分析这张收据、发票、转账截图或账单图片，并提取出纯 JSON 数据格式（切勿输出任何 markdown 格式标记，直接输出 JSON）：
+        const prompt = `Bạn là trợ lý kế toán tài chính gia đình. Hãy phân tích hóa đơn hoặc ảnh chuyển khoản này và trích xuất thông tin ra JSON thuần túy (không dùng markdown block):
         {
-          "description": "简要具体的商品、服务名称或收款方（使用中文）",
-          "amount": 整数形式的纯数字金额,
-          "category": "餐饮买菜" | "水电与公用" | "交通出行" | "日用家居" | "医疗健康" | "教育培训" | "其他支出",
+          "description": "Tên chi tiết mặt hàng, dịch vụ hoặc người nhận",
+          "amount": số_tiền_nguyên_vnd,
+          "category": "Ăn uống" | "Hóa đơn & Tiện ích" | "Đi lại" | "Mua sắm" | "Y tế & Sức khỏe" | "Giáo dục" | "Khác",
           "date": "YYYY-MM-DD"
         }`;
 
@@ -1236,7 +1201,7 @@
           body: JSON.stringify(payload)
         });
 
-        if (!response.ok) throw new Error(`HTTP 错误代码 ${response.status}`);
+        if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
 
         const data = await response.json();
         const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -1262,49 +1227,60 @@
         this.aiStatus.style.display = "none";
       }
 
-      saveExpense() {
+      async saveExpense() {
         const desc = this.itemDesc.value.trim();
         const amount = parseFloat(this.itemAmount.value);
         const category = this.itemCategory.value;
         const date = this.itemDate.value;
 
         if (!desc || isNaN(amount) || amount <= 0 || !date) {
-          alert("请完整填写规范的支出信息。");
+          alert("Vui lòng điền đầy đủ thông tin hợp lệ.");
           return;
         }
 
-        const id = "e_" + Date.now();
         const newRecord = {
-          id: id,
+          id: "e_" + Date.now(),
+          type: "expense",
           desc: desc,
           amount: amount,
           category: category,
           date: date,
-          receiptImage: this.activeAttachedImage || null,
-          _deleted: false
+          receiptImage: this.activeAttachedImage || ""
         };
 
-        this.engine.setExpense(id, newRecord);
+        this.transactions.unshift(newRecord);
+        this.saveLocalCache();
 
         this.itemDesc.value = "";
         this.itemAmount.value = "";
         this.itemDate.value = new Date().toISOString().split("T")[0];
         this.clearActiveImage();
+
+        try {
+          await this.cloudSync.sendAction("add", { item: newRecord });
+          setTimeout(() => this.syncWithGoogleSheet(true), 1200);
+        } catch (err) {
+          console.error("Lỗi lưu lên Google Cloud:", err);
+        }
       }
 
-      deleteExpense(id) {
-        if (!confirm("确定要在所有已同步的设备中删除此项支出吗？金额将返还到可用预算。")) return;
-        this.engine.deleteExpense(id);
-      }
+      async deleteTransaction(id) {
+        if (!confirm("Bạn có chắc chắn muốn xóa giao dịch này? Dữ liệu trên Google Sheets cũng sẽ được xóa.")) {
+          return;
+        }
+        this.transactions = this.transactions.filter(i => String(i.id) !== String(id));
+        this.saveLocalCache();
 
-      deleteIncome(id) {
-        if (!confirm("确定要在所有已同步的设备中删除此笔注入预算吗？总预算将相应扣减。")) return;
-        this.engine.deleteBudget(id);
+        try {
+          await this.cloudSync.sendAction("delete", { id: id });
+          setTimeout(() => this.syncWithGoogleSheet(true), 1200);
+        } catch (err) {
+          console.error("Lỗi xóa trên Google Cloud:", err);
+        }
       }
 
       openEditExpenseModal(id) {
-        const all = this.engine.getExpensesArray();
-        const item = all.find(i => String(i.id) === String(id));
+        const item = this.transactions.find(i => String(i.id) === String(id));
         if (!item) return;
 
         this.editExpenseId.value = item.id;
@@ -1317,12 +1293,11 @@
       }
 
       openEditIncomeModal(id) {
-        const all = this.engine.getBudgetsArray();
-        const item = all.find(i => String(i.id) === String(id));
+        const item = this.transactions.find(i => String(i.id) === String(id));
         if (!item) return;
 
         this.editIncomeId.value = item.id;
-        this.editIncomeNote.value = item.note || "";
+        this.editIncomeNote.value = item.desc || "";
         this.editIncomeAmount.value = item.amount;
         this.editIncomeDate.value = item.date || new Date().toISOString().split("T")[0];
 
@@ -1335,17 +1310,16 @@
       }
 
       exportCsv() {
-        const unifiedList = this.getUnifiedTransactionList();
-        if (unifiedList.length === 0) {
-          alert("暂无账目明细可供导出。");
+        if (this.transactions.length === 0) {
+          alert("Chưa có giao dịch để xuất báo cáo.");
           return;
         }
 
-        let csv = "\uFEFF日期,类型,分类,说明/明细,金额(VNĐ),是否有凭证截图\n";
-        unifiedList.forEach(item => {
-          const typeStr = item.type === "income" ? "注入预算 (+)" : "日常支出 (-)";
+        let csv = "\uFEFFNgày,Loại,Danh mục / Phân loại,Nội dung,Số tiền (VNĐ),Có ảnh\n";
+        this.transactions.forEach(item => {
+          const typeStr = item.type === "income" ? "Bơm tiền (+)" : "Chi tiêu (-)";
           const safeDesc = `"${(item.desc || "").replace(/"/g, '""')}"`;
-          const hasImg = item.receiptImage ? "有凭证" : "无";
+          const hasImg = item.receiptImage ? "Có" : "Không";
           const amountFormatted = (item.type === "income" ? "+" : "-") + item.amount;
           csv += `${item.date},${typeStr},${item.category},${safeDesc},${amountFormatted},${hasImg}\n`;
         });
@@ -1354,53 +1328,21 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `家庭收支账本_${this.roomId}_${new Date().toISOString().split("T")[0]}.csv`;
+        a.download = `ThuChi_GoogleSheets_${new Date().toISOString().split("T")[0]}.csv`;
         a.click();
         URL.revokeObjectURL(url);
       }
 
-      getUnifiedTransactionList() {
-        const budgets = this.engine.getBudgetsArray();
-        const expenses = this.engine.getExpensesArray();
+      render() {
+        let totalBudget = 0;
+        let totalExpense = 0;
 
-        const incomeList = budgets.map(b => ({
-          id: b.id,
-          type: "income",
-          date: b.date || "2026-01-01",
-          desc: b.note || "预算注入",
-          category: "预算来源",
-          amount: Number(b.amount) || 0,
-          receiptImage: null
-        }));
-
-        const expenseList = expenses.map(e => ({
-          id: e.id,
-          type: "expense",
-          date: e.date,
-          desc: e.desc,
-          category: e.category,
-          amount: Number(e.amount) || 0,
-          receiptImage: e.receiptImage || null
-        }));
-
-        const combined = [...incomeList, ...expenseList];
-
-        combined.sort((a, b) => {
-          if (b.date === a.date) {
-            return String(b.id).localeCompare(String(a.id));
-          }
-          return b.date.localeCompare(a.date);
+        this.transactions.forEach(t => {
+          const amt = Number(t.amount) || 0;
+          if (t.type === "income") totalBudget += amt;
+          else if (t.type === "expense") totalExpense += amt;
         });
 
-        return combined;
-      }
-
-      render() {
-        const budgets = this.engine.getBudgetsArray();
-        const expenses = this.engine.getExpensesArray();
-
-        const totalBudget = budgets.reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
-        const totalExpense = expenses.reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
         const balance = totalBudget - totalExpense;
 
         this.budgetDisplay.textContent = this.formatCurrency(totalBudget);
@@ -1413,45 +1355,48 @@
           this.balanceDisplay.className = "amount balance-pos";
         }
 
-        const allTransactions = this.getUnifiedTransactionList();
-        
-        let filteredTransactions = allTransactions;
+        let displayList = [...this.transactions];
         if (this.currentFilter === "income") {
-          filteredTransactions = allTransactions.filter(t => t.type === "income");
+          displayList = displayList.filter(t => t.type === "income");
         } else if (this.currentFilter === "expense") {
-          filteredTransactions = allTransactions.filter(t => t.type === "expense");
+          displayList = displayList.filter(t => t.type === "expense");
         }
 
-        this.txCount.textContent = `${filteredTransactions.length} 条记录`;
+        displayList.sort((a, b) => {
+          if (b.date === a.date) return String(b.id).localeCompare(String(a.id));
+          return String(b.date).localeCompare(String(a.date));
+        });
+
+        this.txCount.textContent = `${displayList.length} giao dịch`;
         this.transactionTableBody.innerHTML = "";
 
-        if (filteredTransactions.length === 0) {
+        if (displayList.length === 0) {
           this.transactionTableBody.innerHTML = `
             <tr>
               <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 32px;">
-                当前账本房间尚无任何交易明细。
+                Chưa có dữ liệu giao dịch nào.
               </td>
             </tr>
           `;
           return;
         }
 
-        filteredTransactions.forEach(item => {
+        displayList.forEach(item => {
           const row = document.createElement("tr");
 
           let imgHtml = "<span style='color: #94a3b8; font-size: 11px;'>-</span>";
-          if (item.receiptImage) {
-            imgHtml = `<img class="receipt-thumbnail" src="${item.receiptImage}" alt="凭证" title="点击放大查看" />`;
+          if (item.receiptImage && item.receiptImage.length > 20) {
+            imgHtml = `<img class="receipt-thumbnail" src="${item.receiptImage}" alt="Chứng từ" title="Nhấp để xem to" />`;
           }
 
           let typeBadge = "";
           let amountFormatted = "";
 
           if (item.type === "income") {
-            typeBadge = `<span class="badge badge-income">注入预算</span>`;
+            typeBadge = `<span class="badge badge-income">Bơm tiền</span>`;
             amountFormatted = `<strong style="color: var(--success);">+${this.formatCurrency(item.amount)}</strong>`;
           } else {
-            typeBadge = `<span class="badge badge-expense">日常支出</span>`;
+            typeBadge = `<span class="badge badge-expense">Chi tiêu</span>`;
             amountFormatted = `<strong style="color: var(--danger);">-${this.formatCurrency(item.amount)}</strong>`;
           }
 
@@ -1464,13 +1409,13 @@
             <td>${amountFormatted}</td>
             <td>
               <div class="action-links">
-                <button type="button" class="btn-link btn-edit" data-id="${item.id}" data-type="${item.type}">修改</button>
-                <button type="button" class="btn-link btn-delete" data-id="${item.id}" data-type="${item.type}">删除</button>
+                <button type="button" class="btn-link btn-edit" data-id="${item.id}" data-type="${item.type}">Sửa</button>
+                <button type="button" class="btn-link btn-delete" data-id="${item.id}" data-type="${item.type}">Xóa</button>
               </div>
             </td>
           `;
 
-          if (item.receiptImage) {
+          if (item.receiptImage && item.receiptImage.length > 20) {
             row.querySelector(".receipt-thumbnail").addEventListener("click", () => {
               this.openLightbox(item.receiptImage);
             });
@@ -1488,11 +1433,7 @@
           });
 
           btnDelete.addEventListener("click", () => {
-            if (item.type === "income") {
-              this.deleteIncome(item.id);
-            } else {
-              this.deleteExpense(item.id);
-            }
+            this.deleteTransaction(item.id);
           });
 
           this.transactionTableBody.appendChild(row);
@@ -1501,7 +1442,7 @@
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-      new FamilyFinanceAppZh();
+      new FamilyFinanceApp();
     });
   </script>
 </body>
