@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Sổ Quản Lý Thu Chi & Ngân Sách Gia Đình</title>
+  <title>家庭收支与预算在线协同系统</title>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#2563eb" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="ThuChiGiaDinh" />
+  <meta name="apple-mobile-web-app-title" content="家庭收支账本" />
 
   <style>
     :root {
@@ -31,7 +31,7 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
 
@@ -481,93 +481,93 @@
 <body>
   <div class="container">
     <header>
-      <h1>Sổ Quản Lý Thu Chi & Ngân Sách Gia Đình</h1>
+      <h1>家庭收支与预算在线协同系统</h1>
       <div class="header-actions">
-        <button type="button" class="btn btn-primary" id="btnManualSync">🔄 Đồng Bộ Ngay</button>
-        <button type="button" class="btn btn-secondary" id="btnExportCsv">📊 Xuất CSV</button>
+        <button type="button" class="btn btn-primary" id="btnManualSync">🔄 立即同步</button>
+        <button type="button" class="btn btn-secondary" id="btnExportCsv">📊 导出 CSV</button>
       </div>
     </header>
 
     <div class="sync-banner">
       <div class="sync-badge">
         <span class="status-dot" id="syncDot"></span>
-        <span id="syncStatusText">Đang đồng bộ với Google Sheets...</span>
+        <span id="syncStatusText">正在与 Google Sheets 同步数据...</span>
       </div>
-      <span style="font-size: 11.5px; color: var(--text-muted);" id="lastSyncTimeText">Vừa xong</span>
+      <span style="font-size: 11.5px; color: var(--text-muted);" id="lastSyncTimeText">刚刚</span>
     </div>
 
     <section class="overview-grid">
       <div class="card">
         <div class="card-title">
-          <span>Tổng Ngân Sách Nạp</span>
-          <button type="button" class="btn btn-secondary" style="padding: 2px 8px; font-size: 11px;" id="btnOpenAddBudgetModal">+ Bơm Tiền</button>
+          <span>总注入预算</span>
+          <button type="button" class="btn btn-secondary" style="padding: 2px 8px; font-size: 11px;" id="btnOpenAddBudgetModal">+ 注入预算</button>
         </div>
         <div class="amount budget" id="budgetDisplay">0 ₫</div>
       </div>
       <div class="card">
-        <div class="card-title">Tổng Tiền Đã Chi</div>
+        <div class="card-title">累计已支出</div>
         <div class="amount expense" id="totalExpenseDisplay">0 ₫</div>
       </div>
       <div class="card">
-        <div class="card-title">Số Dư Khả Dụng</div>
+        <div class="card-title">当前可用结余</div>
         <div class="amount balance-pos" id="balanceDisplay">0 ₫</div>
       </div>
     </section>
 
     <div class="main-layout">
       <section class="card" id="entrySection">
-        <h2 style="font-size: 16px; margin-bottom: 12px;">Ghi nhận khoản chi</h2>
+        <h2 style="font-size: 16px; margin-bottom: 12px;">录入支出账目</h2>
         <div id="aiStatus" class="status-msg"></div>
 
         <form id="expenseForm">
           <div class="row-with-image">
             <div>
               <div class="form-group">
-                <label for="itemDesc">Nội dung chi tiêu</label>
-                <input type="text" id="itemDesc" placeholder="VD: Đi chợ, Tiền điện, Cà phê..." required />
+                <label for="itemDesc">支出内容 / 项目名称</label>
+                <input type="text" id="itemDesc" placeholder="例如：超市采购、水电费、买菜..." required />
               </div>
 
               <div class="form-group" style="margin-bottom: 0;">
-                <label for="itemAmount">Số tiền (VNĐ)</label>
-                <input type="number" id="itemAmount" placeholder="VD: 150000" min="1" step="any" required />
+                <label for="itemAmount">金额 (VNĐ / 货币)</label>
+                <input type="number" id="itemAmount" placeholder="例如：150000" min="1" step="any" required />
               </div>
             </div>
 
             <div class="form-group" style="margin-bottom: 0;">
-              <label>Ảnh chụp (nếu có)</label>
+              <label>凭证截图 (选填)</label>
               <div class="image-picker-box" id="imagePickerBox">
                 <input type="file" id="imageInput" accept="image/*" />
                 <div class="image-picker-empty" id="imagePickerEmpty">
                   <span>📷</span>
-                  Chụp / Tải ảnh
+                  拍照 / 上传图片
                 </div>
-                <img id="previewImage" class="preview-active-img" alt="Xem trước" />
-                <button type="button" class="btn-remove-img" id="btnRemovePreview" title="Bỏ ảnh">&times;</button>
+                <img id="previewImage" class="preview-active-img" alt="凭证预览" />
+                <button type="button" class="btn-remove-img" id="btnRemovePreview" title="移除图片">&times;</button>
               </div>
             </div>
           </div>
 
           <div style="margin-top: 12px;">
             <div class="form-group">
-              <label for="itemCategory">Danh mục</label>
+              <label for="itemCategory">支出分类</label>
               <select id="itemCategory">
-                <option value="Ăn uống">Ăn uống / Đi chợ</option>
-                <option value="Hóa đơn & Tiện ích">Hóa đơn & Tiện ích</option>
-                <option value="Đi lại">Đi lại / Xăng xe</option>
-                <option value="Mua sắm">Mua sắm đồ gia dụng</option>
-                <option value="Y tế & Sức khỏe">Y tế & Sức khỏe</option>
-                <option value="Giáo dục">Giáo dục / Học tập</option>
-                <option value="Khác">Khoản chi khác</option>
+                <option value="餐饮买菜 / 超市食材">餐饮买菜 / 超市食材</option>
+                <option value="公用事业 / 水电账单">公用事业 / 水电账单</option>
+                <option value="交通出行 / 加油保养">交通出行 / 加油保养</option>
+                <option value="居家日常 / 网购日用">居家日常 / 网购日用</option>
+                <option value="医疗保健 / 药品门诊">医疗保健 / 药品门诊</option>
+                <option value="教育培训 / 学习提升">教育培训 / 学习提升</option>
+                <option value="其他杂项支出">其他杂项支出</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label for="itemDate">Ngày chi</label>
+              <label for="itemDate">支出日期</label>
               <input type="date" id="itemDate" required />
             </div>
 
             <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; margin-top: 4px;" id="submitBtn">
-              Trừ Vào Ngân Sách
+              从预算中扣除
             </button>
           </div>
         </form>
@@ -575,27 +575,27 @@
 
       <section class="card" id="historySection">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <h2 style="font-size: 16px;">Lịch sử giao dịch (Đồng bộ Cloud)</h2>
-          <span style="font-size: 12px; color: var(--text-muted);" id="txCount">0 giao dịch</span>
+          <h2 style="font-size: 16px;">明细历史 (全端实时同步)</h2>
+          <span style="font-size: 12px; color: var(--text-muted);" id="txCount">0 笔记录</span>
         </div>
 
         <div class="filter-bar">
-          <button type="button" class="filter-btn active" data-filter="all">Tất cả</button>
-          <button type="button" class="filter-btn" data-filter="income">Chỉ tiền bơm (+)</button>
-          <button type="button" class="filter-btn" data-filter="expense">Chỉ tiền chi (-)</button>
+          <button type="button" class="filter-btn active" data-filter="all">全部账目</button>
+          <button type="button" class="filter-btn" data-filter="income">仅看注入 (+)</button>
+          <button type="button" class="filter-btn" data-filter="expense">仅看支出 (-)</button>
         </div>
 
         <div class="table-container">
           <table>
             <thead>
               <tr>
-                <th>Ngày</th>
-                <th>Loại</th>
-                <th>Ảnh</th>
-                <th>Nội dung / Nguồn tiền</th>
-                <th>Danh mục</th>
-                <th>Số tiền</th>
-                <th>Thao tác</th>
+                <th>日期</th>
+                <th>类型</th>
+                <th>凭证</th>
+                <th>明细描述 / 资金来源</th>
+                <th>分类</th>
+                <th>金额</th>
+                <th>操作</th>
               </tr>
             </thead>
             <tbody id="transactionTableBody"></tbody>
@@ -608,25 +608,25 @@
   <div class="modal-overlay" id="budgetModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Thêm / Bơm Ngân Sách</h2>
+        <h2>注入 / 补充家庭备用预算</h2>
         <button type="button" class="btn-close" id="btnCloseBudgetModal">&times;</button>
       </div>
       <form id="addBudgetForm">
         <div class="form-group">
-          <label for="budgetAddAmount">Số tiền bơm vào (VNĐ)</label>
-          <input type="number" id="budgetAddAmount" placeholder="VD: 5000000" min="1" step="any" required />
+          <label for="budgetAddAmount">注入金额 (VNĐ)</label>
+          <input type="number" id="budgetAddAmount" placeholder="例如：5000000" min="1" step="any" required />
         </div>
         <div class="form-group">
-          <label for="budgetAddNote">Nguồn tiền / Diễn giải</label>
-          <input type="text" id="budgetAddNote" placeholder="VD: Lương, Tiền thưởng, Chuyển khoản thêm..." required />
+          <label for="budgetAddNote">资金来源 / 补充说明</label>
+          <input type="text" id="budgetAddNote" placeholder="例如：工资到账、奖金分红、额外转入..." required />
         </div>
         <div class="form-group">
-          <label for="budgetAddDate">Ngày nhận / Bơm tiền</label>
+          <label for="budgetAddDate">注入日期</label>
           <input type="date" id="budgetAddDate" required />
         </div>
         <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" id="btnCancelBudget">Hủy</button>
-          <button type="button" class="btn btn-success" id="btnSubmitAddBudget">Ghi Nhận Bơm Tiền</button>
+          <button type="button" class="btn btn-secondary" id="btnCancelBudget">取消</button>
+          <button type="button" class="btn btn-success" id="btnSubmitAddBudget">确认注入预算</button>
         </div>
       </form>
     </div>
@@ -635,38 +635,38 @@
   <div class="modal-overlay" id="editExpenseModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Chỉnh Sửa Khoản Chi Tiêu</h2>
+        <h2>修改支出记录</h2>
         <button type="button" class="btn-close" id="btnCloseEditExpenseModal">&times;</button>
       </div>
       <form id="editExpenseForm">
         <input type="hidden" id="editExpenseId" />
         <div class="form-group">
-          <label for="editExpenseDesc">Nội dung chi</label>
+          <label for="editExpenseDesc">支出描述</label>
           <input type="text" id="editExpenseDesc" required />
         </div>
         <div class="form-group">
-          <label for="editExpenseAmount">Số tiền (VNĐ)</label>
+          <label for="editExpenseAmount">支出金额 (VNĐ)</label>
           <input type="number" id="editExpenseAmount" min="1" step="any" required />
         </div>
         <div class="form-group">
-          <label for="editExpenseCategory">Danh mục</label>
+          <label for="editExpenseCategory">支出分类</label>
           <select id="editExpenseCategory">
-            <option value="Ăn uống">Ăn uống / Đi chợ</option>
-            <option value="Hóa đơn & Tiện ích">Hóa đơn & Tiện ích</option>
-            <option value="Đi lại">Đi lại / Xăng xe</option>
-            <option value="Mua sắm">Mua sắm đồ gia dụng</option>
-            <option value="Y tế & Sức khỏe">Y tế & Sức khỏe</option>
-            <option value="Giáo dục">Giáo dục / Học tập</option>
-            <option value="Khác">Khoản chi khác</option>
+            <option value="餐饮买菜 / 超市食材">餐饮买菜 / 超市食材</option>
+            <option value="公用事业 / 水电账单">公用事业 / 水电账单</option>
+            <option value="交通出行 / 加油保养">交通出行 / 加油保养</option>
+            <option value="居家日常 / 网购日用">居家日常 / 网购日用</option>
+            <option value="医疗保健 / 药品门诊">医疗保健 / 药品门诊</option>
+            <option value="教育培训 / 学习提升">教育培训 / 学习提升</option>
+            <option value="其他杂项支出">其他杂项支出</option>
           </select>
         </div>
         <div class="form-group">
-          <label for="editExpenseDate">Ngày chi</label>
+          <label for="editExpenseDate">支出日期</label>
           <input type="date" id="editExpenseDate" required />
         </div>
         <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" id="btnCancelEditExpense">Hủy</button>
-          <button type="button" class="btn btn-primary" id="btnSubmitEditExpense">Lưu Thay Đổi</button>
+          <button type="button" class="btn btn-secondary" id="btnCancelEditExpense">取消</button>
+          <button type="button" class="btn btn-primary" id="btnSubmitEditExpense">保存修改</button>
         </div>
       </form>
     </div>
@@ -675,26 +675,26 @@
   <div class="modal-overlay" id="editIncomeModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Chỉnh Sửa Lần Bơm Tiền</h2>
+        <h2>修改预算注入记录</h2>
         <button type="button" class="btn-close" id="btnCloseEditIncomeModal">&times;</button>
       </div>
       <form id="editIncomeForm">
         <input type="hidden" id="editIncomeId" />
         <div class="form-group">
-          <label for="editIncomeNote">Nguồn tiền / Ghi chú</label>
+          <label for="editIncomeNote">资金来源 / 来源说明</label>
           <input type="text" id="editIncomeNote" required />
         </div>
         <div class="form-group">
-          <label for="editIncomeAmount">Số tiền đã bơm (VNĐ)</label>
+          <label for="editIncomeAmount">注入金额 (VNĐ)</label>
           <input type="number" id="editIncomeAmount" min="1" step="any" required />
         </div>
         <div class="form-group">
-          <label for="editIncomeDate">Ngày bơm tiền</label>
+          <label for="editIncomeDate">注入日期</label>
           <input type="date" id="editIncomeDate" required />
         </div>
         <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" id="btnCancelEditIncome">Hủy</button>
-          <button type="button" class="btn btn-success" id="btnSubmitEditIncome">Cập Nhật Số Tiền</button>
+          <button type="button" class="btn btn-secondary" id="btnCancelEditIncome">取消</button>
+          <button type="button" class="btn btn-success" id="btnSubmitEditIncome">更新金额</button>
         </div>
       </form>
     </div>
@@ -703,13 +703,13 @@
   <div class="modal-overlay" id="lightboxModal">
     <div class="lightbox-wrapper" id="lightboxWrapper">
       <span class="lightbox-close" id="btnCloseLightbox">&times;</span>
-      <img id="lightboxImage" src="" alt="Chứng từ phóng to" />
+      <img id="lightboxImage" src="" alt="凭证大图查看" />
     </div>
   </div>
 
   <script>
     /**
-     * Module bảo mật cung cấp Gemini API Key (chống GitHub Scanner)
+     * 安全组装 Gemini API Key，防止触发 GitHub Secret Scanning 自动化拦截
      */
     class ApiKeyProvider {
       static get() {
@@ -721,21 +721,21 @@
     }
 
     /**
-     * Module đồng bộ hai chiều Google Apps Script Web App
+     * Google Apps Script Web App 数据双向同步管理服务
      */
     class GoogleSheetSync {
       constructor() {
         this.webAppUrl = "https://script.google.com/macros/s/AKfycbxB_-xgFxLbceRBIwSe1vHSiHy66pOEGk8jctqjCjF497iLvzKqvIlLle1RuIix8J9mnQ/exec";
       }
 
-      // Đọc toàn bộ danh sách giao dịch qua JSONP để không bị chặn CORS trên mọi trình duyệt
+      // 通过 JSONP 协议获取全量数据，彻底免疫移动端及跨域 CORS 拦截
       fetchAllViaJsonp() {
         return new Promise((resolve, reject) => {
           const callbackName = "jsonp_cb_" + Date.now() + "_" + Math.floor(Math.random() * 1000000);
           const script = document.createElement("script");
           const timeout = setTimeout(() => {
             cleanup();
-            reject(new Error("Timeout khi kết nối đến Google Apps Script"));
+            reject(new Error("连接 Google Apps Script 服务超时"));
           }, 15000);
 
           const cleanup = () => {
@@ -749,21 +749,21 @@
             if (response && response.success && Array.isArray(response.data)) {
               resolve(response.data);
             } else {
-              reject(new Error(response?.error || "Dữ liệu trả về không hợp lệ"));
+              reject(new Error(response?.error || "服务端返回数据结构异常"));
             }
           };
 
           script.src = `${this.webAppUrl}?action=fetch&prefix=${callbackName}&t=${Date.now()}`;
           script.onerror = () => {
             cleanup();
-            reject(new Error("Lỗi tải script JSONP từ Google"));
+            reject(new Error("从 Google Apps Script 加载 JSONP 脚本失败"));
           };
 
           document.body.appendChild(script);
         });
       }
 
-      // Gửi lệnh Thêm / Sửa / Xóa qua POST không bị chặn CORS bằng form urlencoded
+      // 提交增加、修改、删除操作
       async sendAction(action, payloadData) {
         const params = new URLSearchParams();
         params.append("action", action);
@@ -785,14 +785,14 @@
           });
           return true;
         } catch (error) {
-          console.error("Lỗi gửi dữ liệu lên Google Cloud:", error);
+          console.error("提交至 Google Cloud 异常:", error);
           throw error;
         }
       }
     }
 
     /**
-     * Điều khiển chính của ứng dụng
+     * 核心应用逻辑控制器
      */
     class FamilyFinanceApp {
       constructor() {
@@ -807,7 +807,7 @@
         this.bindEvents();
         this.syncWithGoogleSheet();
 
-        // Tự động kéo dữ liệu mới từ Google Sheets mỗi 7 giây
+        // 后台轮询：每 7 秒拉取 Google Sheets 最新修改
         setInterval(() => {
           this.syncWithGoogleSheet(true);
         }, 7000);
@@ -870,20 +870,20 @@
 
       loadLocalCache() {
         try {
-          const raw = localStorage.getItem("local_finance_records_v6");
+          const raw = localStorage.getItem("local_finance_records_v6_zh");
           if (raw) {
             this.transactions = JSON.parse(raw);
           } else {
             this.transactions = [];
           }
         } catch (e) {
-          console.error("Lỗi đọc cache:", e);
+          console.error("读取本地缓存失败:", e);
         }
         this.render();
       }
 
       saveLocalCache() {
-        localStorage.setItem("local_finance_records_v6", JSON.stringify(this.transactions));
+        localStorage.setItem("local_finance_records_v6_zh", JSON.stringify(this.transactions));
         this.render();
       }
 
@@ -893,7 +893,7 @@
 
         if (!isSilent) {
           this.syncDot.className = "status-dot syncing";
-          this.syncStatusText.textContent = "Đang đồng bộ với Google Sheets...";
+          this.syncStatusText.textContent = "正在同步云端 Google Sheets 数据...";
         }
 
         try {
@@ -905,14 +905,14 @@
 
           this.syncDot.className = "status-dot";
           this.syncDot.style.backgroundColor = "var(--success)";
-          this.syncStatusText.textContent = "Đã kết nối và đồng bộ với Google Sheets";
+          this.syncStatusText.textContent = "已连接并保持与 Google Sheets 实时同步";
           const now = new Date();
           this.lastSyncTimeText.textContent = `${now.getHours()}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
         } catch (error) {
-          console.warn("Đang kiểm tra kết nối Google Cloud:", error.message);
+          console.warn("当前处于离线模式或网络恢复中:", error.message);
           this.syncDot.className = "status-dot";
           this.syncDot.style.backgroundColor = "var(--warning)";
-          this.syncStatusText.textContent = "Đang dùng dữ liệu ngoại tuyến (Tự thử lại khi có mạng)";
+          this.syncStatusText.textContent = "处于离线模式 (数据已保存在本地，连网后自动同步)";
         } finally {
           this.isSyncing = false;
         }
@@ -969,13 +969,13 @@
           const dateVal = this.budgetAddDate.value;
 
           if (isNaN(amountVal) || amountVal <= 0) {
-            alert("Vui lòng nhập số tiền hợp lệ lớn hơn 0.");
+            alert("请输入大于 0 的有效注入金额。");
             this.budgetAddAmount.focus();
             return;
           }
 
           if (!noteVal) {
-            alert("Vui lòng nhập nguồn tiền hoặc diễn giải.");
+            alert("请输入资金来源或明细说明。");
             this.budgetAddNote.focus();
             return;
           }
@@ -985,7 +985,7 @@
             type: "income",
             amount: amountVal,
             desc: noteVal,
-            category: "Ngân sách nạp",
+            category: "预算注入",
             date: dateVal,
             receiptImage: ""
           };
@@ -998,7 +998,7 @@
             await this.cloudSync.sendAction("add", { item: newRecord });
             setTimeout(() => this.syncWithGoogleSheet(true), 1200);
           } catch (err) {
-            console.error("Lỗi đẩy bản ghi lên Cloud:", err);
+            console.error("上传记录至 Google Cloud 异常:", err);
           }
         };
 
@@ -1020,7 +1020,7 @@
           const date = this.editExpenseDate.value;
 
           if (!desc || isNaN(amount) || amount <= 0 || !date) {
-            alert("Vui lòng nhập thông tin hợp lệ.");
+            alert("请核对输入项，所有字段均为必填且金额需大于 0。");
             return;
           }
 
@@ -1037,7 +1037,7 @@
               await this.cloudSync.sendAction("update", { item: item });
               setTimeout(() => this.syncWithGoogleSheet(true), 1200);
             } catch (err) {
-              console.error("Lỗi cập nhật Cloud:", err);
+              console.error("更新云端记录失败:", err);
             }
           }
         };
@@ -1059,7 +1059,7 @@
           const date = this.editIncomeDate.value;
 
           if (!note || isNaN(amount) || amount <= 0 || !date) {
-            alert("Vui lòng nhập đầy đủ thông tin hợp lệ.");
+            alert("请输入有效的资金来源及金额。");
             return;
           }
 
@@ -1075,7 +1075,7 @@
               await this.cloudSync.sendAction("update", { item: item });
               setTimeout(() => this.syncWithGoogleSheet(true), 1200);
             } catch (err) {
-              console.error("Lỗi cập nhật Cloud:", err);
+              console.error("更新注入记录失败:", err);
             }
           }
         };
@@ -1098,7 +1098,7 @@
 
       async handleProcessImage(file) {
         try {
-          this.showStatus("Đang nén và tối ưu hóa ảnh...", "info");
+          this.showStatus("正在压缩和优化票据图像...", "info");
           const base64Data = await this.resizeImage(file, 800, 0.7);
           this.activeAttachedImage = base64Data;
 
@@ -1107,7 +1107,7 @@
           this.imagePickerEmpty.style.display = "none";
           this.btnRemovePreview.style.display = "flex";
 
-          this.showStatus("Gemini AI đang phân tích dữ liệu hóa đơn...", "info");
+          this.showStatus("Gemini AI 正在智能识别凭证与账单内容...", "info");
           const rawBase64 = base64Data.split(",")[1];
           const extracted = await this.callGeminiAPI(rawBase64);
 
@@ -1116,13 +1116,13 @@
             if (extracted.amount && !this.itemAmount.value) this.itemAmount.value = extracted.amount;
             if (extracted.category) this.itemCategory.value = extracted.category;
             if (extracted.date) this.itemDate.value = extracted.date;
-            this.showStatus("Đã nhận diện thành công nội dung từ ảnh!", "success");
+            this.showStatus("AI 已成功提取并自动填充账单数据！", "success");
           } else {
             this.hideStatus();
           }
         } catch (err) {
-          console.warn("Thông báo nhận diện:", err.message);
-          this.showStatus("Đã đính kèm ảnh thành công (có thể bổ sung thông tin tay).", "info");
+          console.warn("AI 识别提示:", err.message);
+          this.showStatus("图片凭证已添加完毕 (可继续手动录入明细)。", "info");
         } finally {
           this.imageInput.value = "";
           setTimeout(() => this.hideStatus(), 3500);
@@ -1163,9 +1163,9 @@
               const compressedData = canvas.toDataURL("image/jpeg", quality);
               resolve(compressedData);
             };
-            img.onerror = () => reject(new Error("Không thể xử lý hình ảnh"));
+            img.onerror = () => reject(new Error("无法解码图像数据"));
           };
-          reader.onerror = () => reject(new Error("Lỗi đọc file"));
+          reader.onerror = () => reject(new Error("读取文件失败"));
         });
       }
 
@@ -1173,11 +1173,11 @@
         const apiKey = ApiKeyProvider.get();
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
-        const prompt = `Bạn là trợ lý kế toán tài chính gia đình. Hãy phân tích hóa đơn hoặc ảnh chuyển khoản này và trích xuất thông tin ra JSON thuần túy (không dùng markdown block):
+        const prompt = `你是一名专业的家庭财务智能会计。请深度分析这张账单发票、收据凭证或转账截图，并提取核心信息，仅以严格的 JSON 纯文本格式输出（严禁包含任何 Markdown 格式代码块或额外说明文本）：
         {
-          "description": "Tên chi tiết mặt hàng, dịch vụ hoặc người nhận",
-          "amount": số_tiền_nguyên_vnd,
-          "category": "Ăn uống" | "Hóa đơn & Tiện ích" | "Đi lại" | "Mua sắm" | "Y tế & Sức khỏe" | "Giáo dục" | "Khác",
+          "description": "简明扼要的支出品名、服务或收款方",
+          "amount": 整数形式的金额数值,
+          "category": "餐饮买菜 / 超市食材" | "公用事业 / 水电账单" | "交通出行 / 加油保养" | "居家日常 / 网购日用" | "医疗保健 / 药品门诊" | "教育培训 / 学习提升" | "其他杂项支出",
           "date": "YYYY-MM-DD"
         }`;
 
@@ -1201,7 +1201,7 @@
           body: JSON.stringify(payload)
         });
 
-        if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
+        if (!response.ok) throw new Error(`Gemini API 响应异常: ${response.status}`);
 
         const data = await response.json();
         const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -1234,7 +1234,7 @@
         const date = this.itemDate.value;
 
         if (!desc || isNaN(amount) || amount <= 0 || !date) {
-          alert("Vui lòng điền đầy đủ thông tin hợp lệ.");
+          alert("请完整填写有效支出信息。");
           return;
         }
 
@@ -1260,12 +1260,12 @@
           await this.cloudSync.sendAction("add", { item: newRecord });
           setTimeout(() => this.syncWithGoogleSheet(true), 1200);
         } catch (err) {
-          console.error("Lỗi lưu lên Google Cloud:", err);
+          console.error("同步支出记录至 Google Cloud 失败:", err);
         }
       }
 
       async deleteTransaction(id) {
-        if (!confirm("Bạn có chắc chắn muốn xóa giao dịch này? Dữ liệu trên Google Sheets cũng sẽ được xóa.")) {
+        if (!confirm("确定要删除这笔记录吗？该操作将同步在 Google Sheets 云端中生效。")) {
           return;
         }
         this.transactions = this.transactions.filter(i => String(i.id) !== String(id));
@@ -1275,7 +1275,7 @@
           await this.cloudSync.sendAction("delete", { id: id });
           setTimeout(() => this.syncWithGoogleSheet(true), 1200);
         } catch (err) {
-          console.error("Lỗi xóa trên Google Cloud:", err);
+          console.error("云端删除操作失败:", err);
         }
       }
 
@@ -1311,15 +1311,15 @@
 
       exportCsv() {
         if (this.transactions.length === 0) {
-          alert("Chưa có giao dịch để xuất báo cáo.");
+          alert("暂无账目数据可供导出。");
           return;
         }
 
-        let csv = "\uFEFFNgày,Loại,Danh mục / Phân loại,Nội dung,Số tiền (VNĐ),Có ảnh\n";
+        let csv = "\uFEFF日期,类型,所属分类,明细描述 / 资金来源,金额 (VNĐ),是否有凭证\n";
         this.transactions.forEach(item => {
-          const typeStr = item.type === "income" ? "Bơm tiền (+)" : "Chi tiêu (-)";
+          const typeStr = item.type === "income" ? "注入预算 (+)" : "日常支出 (-)";
           const safeDesc = `"${(item.desc || "").replace(/"/g, '""')}"`;
-          const hasImg = item.receiptImage ? "Có" : "Không";
+          const hasImg = item.receiptImage ? "有" : "无";
           const amountFormatted = (item.type === "income" ? "+" : "-") + item.amount;
           csv += `${item.date},${typeStr},${item.category},${safeDesc},${amountFormatted},${hasImg}\n`;
         });
@@ -1328,7 +1328,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `ThuChi_GoogleSheets_${new Date().toISOString().split("T")[0]}.csv`;
+        a.download = `家庭收支明细_${new Date().toISOString().split("T")[0]}.csv`;
         a.click();
         URL.revokeObjectURL(url);
       }
@@ -1367,14 +1367,14 @@
           return String(b.date).localeCompare(String(a.date));
         });
 
-        this.txCount.textContent = `${displayList.length} giao dịch`;
+        this.txCount.textContent = `${displayList.length} 笔记录`;
         this.transactionTableBody.innerHTML = "";
 
         if (displayList.length === 0) {
           this.transactionTableBody.innerHTML = `
             <tr>
               <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 32px;">
-                Chưa có dữ liệu giao dịch nào.
+                暂无账目明细记录。
               </td>
             </tr>
           `;
@@ -1386,17 +1386,17 @@
 
           let imgHtml = "<span style='color: #94a3b8; font-size: 11px;'>-</span>";
           if (item.receiptImage && item.receiptImage.length > 20) {
-            imgHtml = `<img class="receipt-thumbnail" src="${item.receiptImage}" alt="Chứng từ" title="Nhấp để xem to" />`;
+            imgHtml = `<img class="receipt-thumbnail" src="${item.receiptImage}" alt="凭证" title="点击查看大图" />`;
           }
 
           let typeBadge = "";
           let amountFormatted = "";
 
           if (item.type === "income") {
-            typeBadge = `<span class="badge badge-income">Bơm tiền</span>`;
+            typeBadge = `<span class="badge badge-income">注入预算</span>`;
             amountFormatted = `<strong style="color: var(--success);">+${this.formatCurrency(item.amount)}</strong>`;
           } else {
-            typeBadge = `<span class="badge badge-expense">Chi tiêu</span>`;
+            typeBadge = `<span class="badge badge-expense">日常支出</span>`;
             amountFormatted = `<strong style="color: var(--danger);">-${this.formatCurrency(item.amount)}</strong>`;
           }
 
@@ -1409,8 +1409,8 @@
             <td>${amountFormatted}</td>
             <td>
               <div class="action-links">
-                <button type="button" class="btn-link btn-edit" data-id="${item.id}" data-type="${item.type}">Sửa</button>
-                <button type="button" class="btn-link btn-delete" data-id="${item.id}" data-type="${item.type}">Xóa</button>
+                <button type="button" class="btn-link btn-edit" data-id="${item.id}" data-type="${item.type}">编辑</button>
+                <button type="button" class="btn-link btn-delete" data-id="${item.id}" data-type="${item.type}">删除</button>
               </div>
             </td>
           `;
